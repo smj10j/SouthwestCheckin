@@ -29,7 +29,18 @@ class Reservation():
 
         USER_EXPERIENCE_KEY = str(uuid.uuid1()).upper()
         # Pulled from proxying the Southwest iOS App
-        return {'Host': 'mobile.southwest.com', 'Content-Type': 'application/json', 'X-API-Key': API_KEY, 'X-User-Experience-Id': USER_EXPERIENCE_KEY, 'Accept': '*/*'}
+
+        headers = {'Host': 'mobile.southwest.com',
+                    'Content-Type': 'application/json',
+                    'X-API-Key': API_KEY,
+                    'X-User-Experience-Id': USER_EXPERIENCE_KEY,
+                    'Accept': 'application/json, text/javascript, */*; q=0.01',
+                    'X-Channel-ID': 'MWEB',
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+        print(json.dumps(headers, indent=2))
+
+        return headers
 
     # You might ask yourself, "Why the hell does this exist?"
     # Basically, there sometimes appears a "hiccup" in Southwest where things
@@ -39,7 +50,11 @@ class Reservation():
             attempts = 0
             headers = Reservation.generate_headers()
             while True:
+                if self.verbose:
+                    print(url);
                 if body is not None:
+                    if self.verbose:
+                        print(json.dumps(body, indent=2))
                     r = requests.post(url, headers=headers, json=body)
                 else:
                     r = requests.get(url, headers=headers)
