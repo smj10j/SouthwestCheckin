@@ -25,6 +25,9 @@ import time
 
 CHECKIN_EARLY_SECONDS = 5
 
+def log(message):
+    now_str = datetime.now().strftime("%d/%m/%Y %H:%M:%S")
+    print(now_str, message)
 
 def schedule_checkin(flight_time, reservation):
     checkin_time = flight_time - timedelta(days=1)
@@ -36,16 +39,16 @@ def schedule_checkin(flight_time, reservation):
         # pretty print our wait time
         m, s = divmod(delta, 60)
         h, m = divmod(m, 60)
-        print("Too early to check in.  Waiting {} hours, {} minutes, {} seconds".format(trunc(h), trunc(m), s))
+        log("Too early to check in.  Waiting {} hours, {} minutes, {} seconds".format(trunc(h), trunc(m), s))
         try:
             time.sleep(delta)
         except OverflowError:
-            print("System unable to sleep for that long, try checking in closer to your departure date")
+            log("System unable to sleep for that long, try checking in closer to your departure date")
             sys.exit(1)
     data = reservation.checkin()
     for flight in data['flights']:
         for doc in flight['passengers']:
-            print("{} got {}{}!".format(doc['name'], doc['boardingGroup'], doc['boardingPosition']))
+            log("{} got {}{}!".format(doc['name'], doc['boardingGroup'], doc['boardingPosition']))
 
 
 def auto_checkin(reservation_number, first_name, last_name, verbose=False):
@@ -67,7 +70,7 @@ def auto_checkin(reservation_number, first_name, last_name, verbose=False):
         date = airport_tz.localize(datetime.strptime(takeoff, '%Y-%m-%d %H:%M'))
         if date > now:
             # found a flight for checkin!
-            print("Flight information found, departing {} at {}".format(airport, date.strftime('%b %d %I:%M%p')))
+            log("Flight information found, departing {} at {}".format(airport, date.strftime('%b %d %I:%M%p')))
             # Checkin with a thread
             t = Thread(target=schedule_checkin, args=(date, r))
             t.daemon = True
@@ -96,5 +99,5 @@ if __name__ == '__main__':
     try:
         auto_checkin(reservation_number, first_name, last_name, verbose)
     except KeyboardInterrupt:
-        print("Ctrl+C detected, canceling checkin")
+        log("Ctrl+C detected, canceling checkin")
         sys.exit()

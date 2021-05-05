@@ -17,6 +17,10 @@ class Reservation():
         self.last = last
         self.verbose = verbose
 
+    def log(message):
+        now_str = datetime.now().strftime("%d/%m/%Y %H:%M:%S")
+        print(now_str, message)
+
     @staticmethod
     def generate_headers():
         config_js = requests.get('https://mobile.southwest.com/js/config.js')
@@ -24,7 +28,7 @@ class Reservation():
             modded = config_js.text[config_js.text.index("API_KEY"):]
             API_KEY = modded[modded.index(':') + 1:modded.index(',')].strip('"')
         else:
-            print("Couldn't get API_KEY")
+            log("Couldn't get API_KEY")
             sys.exit(1)
 
         USER_EXPERIENCE_KEY = str(uuid.uuid1()).upper()
@@ -38,7 +42,7 @@ class Reservation():
                     'X-Channel-ID': 'MWEB',
                     'X-Requested-With': 'XMLHttpRequest'
                 }
-        print(json.dumps(headers, indent=2))
+        log(json.dumps(headers, indent=2))
 
         return headers
 
@@ -62,17 +66,17 @@ class Reservation():
                 if 'httpStatusCode' in data and data['httpStatusCode'] in ['NOT_FOUND', 'BAD_REQUEST', 'FORBIDDEN']:
                     attempts += 1
                     if not self.verbose:
-                        print(data['message'])
+                        log(data['message'])
                     else:
-                        print(r.headers)
-                        print(json.dumps(data, indent=2))
+                        log(r.headers)
+                        log(json.dumps(data, indent=2))
                     if attempts > MAX_ATTEMPTS:
                         sys.exit("Unable to get data, killing self")
                     sleep(CHECKIN_INTERVAL_SECONDS)
                     continue
                 if self.verbose:
-                    print(r.headers)
-                    print(json.dumps(data, indent=2))
+                    log(r.headers)
+                    log(json.dumps(data, indent=2))
                 return data
         except ValueError:
             # Ignore responses with no json data in body
@@ -100,6 +104,6 @@ class Reservation():
         data = self.get_checkin_data()
         info_needed = data['_links']['checkIn']
         url = "{}mobile-air-operations{}".format(BASE_URL, info_needed['href'])
-        print("Attempting check-in...")
+        log("Attempting check-in...")
         confirmation = self.load_json_page(url, info_needed['body'])
         return confirmation
