@@ -1,3 +1,4 @@
+from datetime import datetime
 from time import sleep
 import requests
 import json
@@ -17,7 +18,7 @@ class Reservation():
         self.last = last
         self.verbose = verbose
 
-    def log(message):
+    def log(self, message):
         now_str = datetime.now().strftime("%d/%m/%Y %H:%M:%S")
         print(now_str, message)
 
@@ -28,7 +29,7 @@ class Reservation():
             modded = config_js.text[config_js.text.index("API_KEY"):]
             API_KEY = modded[modded.index(':') + 1:modded.index(',')].strip('"')
         else:
-            log("Couldn't get API_KEY")
+            print("Couldn't get API_KEY")
             sys.exit(1)
 
         USER_EXPERIENCE_KEY = str(uuid.uuid1()).upper()
@@ -42,7 +43,7 @@ class Reservation():
                     'X-Channel-ID': 'MWEB',
                     'X-Requested-With': 'XMLHttpRequest'
                 }
-        log(json.dumps(headers, indent=2))
+        print(json.dumps(headers, indent=2))
 
         return headers
 
@@ -55,10 +56,10 @@ class Reservation():
             headers = Reservation.generate_headers()
             while True:
                 if self.verbose:
-                    print(url);
+                    self.log(url);
                 if body is not None:
                     if self.verbose:
-                        print(json.dumps(body, indent=2))
+                        self.log(json.dumps(body, indent=2))
                     r = requests.post(url, headers=headers, json=body)
                 else:
                     r = requests.get(url, headers=headers)
@@ -66,17 +67,17 @@ class Reservation():
                 if 'httpStatusCode' in data and data['httpStatusCode'] in ['NOT_FOUND', 'BAD_REQUEST', 'FORBIDDEN']:
                     attempts += 1
                     if not self.verbose:
-                        log(data['message'])
+                        self.log(data['message'])
                     else:
-                        log(r.headers)
-                        log(json.dumps(data, indent=2))
+                        self.log(r.headers)
+                        self.log(json.dumps(data, indent=2))
                     if attempts > MAX_ATTEMPTS:
                         sys.exit("Unable to get data, killing self")
                     sleep(CHECKIN_INTERVAL_SECONDS)
                     continue
                 if self.verbose:
-                    log(r.headers)
-                    log(json.dumps(data, indent=2))
+                    self.log(r.headers)
+                    self.log(json.dumps(data, indent=2))
                 return data
         except ValueError:
             # Ignore responses with no json data in body
@@ -104,6 +105,6 @@ class Reservation():
         data = self.get_checkin_data()
         info_needed = data['_links']['checkIn']
         url = "{}mobile-air-operations{}".format(BASE_URL, info_needed['href'])
-        log("Attempting check-in...")
+        self.log("Attempting check-in...")
         confirmation = self.load_json_page(url, info_needed['body'])
         return confirmation
