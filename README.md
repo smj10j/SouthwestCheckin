@@ -38,11 +38,26 @@ This script can either be ran directly on your host or within Docker.
 pip3 install -r requirements.txt
 ```
 
-#### Usage
+#### Usage (Basic)
 
 ```bash
 python3 ./checkin.py CONFIRMATION_NUMBER FIRST_NAME LAST_NAME
 ```
+
+#### Usage (Keep alive)
+
+```bash
+caffeinate -s python3 checkin.py --verbose ...
+```
+
+#### Usage (Multiple)
+
+Add the confirmation numbers and passenger names in `start.js`
+
+```bash
+node start.js
+```
+
 
 #### Run the tests
 
